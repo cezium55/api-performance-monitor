@@ -1,0 +1,40 @@
+services:
+  db:
+    image: mongo:7
+    container_name: ppm-db
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ppm-backend
+    restart: unless-stopped
+    depends_on:
+      - db
+    environment:
+      MONGODB_URI: mongodb://db:27017
+      MONGODB_DB: monitor_db
+      JWT_SECRET: change-this-secret-in-production
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ppm-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:8000
+    ports:
+      - "3000:3000"
+
+volumes:
+  mongo-data:
